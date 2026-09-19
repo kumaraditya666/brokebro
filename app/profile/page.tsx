@@ -98,6 +98,18 @@ export default function ProfilePage() {
         <h3 className="font-display font-bold">Privacy & safety</h3>
         <p className="mt-1 text-sm text-white/55">Financial info is private by default. Share cards never include balances or transactions unless you explicitly opt in. We never ask for bank passwords — there are no bank integrations, by design. Not investment advice, ever.</p>
       </Card>
+
+      <Card className="mt-4 text-center">
+        <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/40">Crafted with 💸 by</p>
+        <div className="mt-2 flex items-center justify-center gap-3">
+          <a href="https://www.instagram.com/aadiiii___666" target="_blank" rel="noopener noreferrer" className="rounded-2xl border border-white/10 bg-white/5 px-5 py-2.5 text-sm font-bold transition hover:border-lime-300/40 hover:text-lime-200">
+            📸 Aditya
+          </a>
+          <a href="https://www.instagram.com/atharvvarshney7" target="_blank" rel="noopener noreferrer" className="rounded-2xl border border-white/10 bg-white/5 px-5 py-2.5 text-sm font-bold transition hover:border-lime-300/40 hover:text-lime-200">
+            📸 Atharv
+          </a>
+        </div>
+      </Card>
     </AppShell>
   );
 }

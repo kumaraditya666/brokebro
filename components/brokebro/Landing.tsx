@@ -164,9 +164,17 @@ export function Landing() {
             <Link href="/wrapped" className="rounded-2xl border border-white/15 px-8 py-4 font-bold transition hover:bg-white/5">Peek at Wrapped</Link>
           </div>
         </motion.div>
-        <footer className="mt-10 flex flex-wrap items-center justify-between gap-3 border-t border-white/8 pt-6 text-xs text-white/40">
-          <span className="font-display font-bold text-white/60">BrokeBro — the finance app students actually open.</span>
-          <span>Education & organization tool. Not investment advice. Never store bank passwords here. 🔒</span>
+        <footer className="mt-10 border-t border-white/8 pt-6 text-xs text-white/40">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <span className="font-display font-bold text-white/60">BrokeBro — the finance app students actually open.</span>
+            <span>Education & organization tool. Not investment advice. Never store bank passwords here. 🔒</span>
+          </div>
+          <p className="mt-3 text-center text-white/45">
+            Crafted with 💸 by{" "}
+            <a href="https://www.instagram.com/aadiiii___666" target="_blank" rel="noopener noreferrer" className="font-bold text-lime-200/80 hover:text-lime-200 hover:underline">Aditya</a>
+            {" "}·{" "}
+            <a href="https://www.instagram.com/atharvvarshney7" target="_blank" rel="noopener noreferrer" className="font-bold text-lime-200/80 hover:text-lime-200 hover:underline">Atharv</a>
+          </p>
         </footer>
       </section>
     </div>
