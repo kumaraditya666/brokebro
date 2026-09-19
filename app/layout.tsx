@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
 
+import { Analytics } from "@vercel/analytics/next"
+
 export const metadata: Metadata = {
   title: "BrokeBro — Know where your money disappears",
   description: "Your money. Your chaos. Finally organized. Student budgeting, splits, quests, Money Wrapped & AI Money Coach.",
@@ -30,6 +32,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </a>
         <div id="main">{children}</div>
       </body>
+      <Analytics />
     </html>
   );
 }
