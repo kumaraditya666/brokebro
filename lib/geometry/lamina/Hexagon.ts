@@ -1,1 +1,0 @@
-export { hexagon } from "./RegularPolygon";

@@ -1,1 +1,0 @@
-export { pentagon } from "./RegularPolygon";

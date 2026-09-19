@@ -3,12 +3,10 @@ import "./globals.css";
 
 import { Analytics } from "@vercel/analytics/next"
 import { SplashKiller } from "@/components/brokebro/SplashKiller";
-import { PlayerProvider } from "@/components/music/PlayerProvider";
-import { MusicShell } from "@/components/music/MusicShell";
 
 export const metadata: Metadata = {
-  title: "BROKE MUSIC — Your music. One player. Zero bullshit.",
-  description: "Ad-free universal music player: licensed catalogs, Creative Commons, your local files, playlists, offline shell. Music without the clutter.",
+  title: "BrokeBro — Know where your money disappears",
+  description: "Your money. Your chaos. Finally organized. Student budgeting, splits, quests, Money Wrapped & AI Money Coach.",
   manifest: "/manifest.webmanifest",
   icons: {
     icon: "/favicon.svg",
@@ -17,12 +15,12 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "BROKE MUSIC",
+    title: "BrokeBro",
   },
   formatDetection: { telephone: false },
   openGraph: {
-    title: "BROKE MUSIC",
-    description: "Your music. One player. Zero bullshit.",
+    title: "BrokeBro",
+    description: "The finance app college students actually WANT to open.",
     type: "website",
   },
 };
@@ -31,15 +29,15 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover", // enables safe-area env() on notched phones
-  themeColor: "#050505",
+  themeColor: "#070605",
 };
 
 // Runs before paint: applies saved theme (no light-flash) — no PII, no tracking.
 const THEME_BOOT = `(function(){try{var t=JSON.parse(localStorage.getItem('brokebro-v1')||'{}');var m=(t&&t.state&&t.state.prefs&&t.state.prefs.theme)||'system';var light=m==='light'||(m==='system'&&window.matchMedia('(prefers-color-scheme: light)').matches);if(light)document.documentElement.classList.add('theme-light');}catch(e){}})();`;
 
 // Theme boot must stay (pre-paint, no flash). The splash node itself is removed
-// by React AFTER hydration (see PwaBoot) — timer-based removal races hydration
-// and crashes it, so there is deliberately no timer here.
+// by React AFTER hydration (see PwaBoot / SplashKiller) — timer-based removal
+// races hydration and crashes it, so there is deliberately no timer here.
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -63,11 +61,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:rounded-xl focus:bg-lime-300 focus:px-4 focus:py-2 focus:font-bold focus:text-black">
           Skip to content
         </a>
-        <PlayerProvider>
-          <MusicShell>
-            <div id="main">{children}</div>
-          </MusicShell>
-        </PlayerProvider>
+        <div id="main">{children}</div>
       </body>
       <Analytics />
     </html>

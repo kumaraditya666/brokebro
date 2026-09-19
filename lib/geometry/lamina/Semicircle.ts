@@ -1,1 +1,0 @@
-export { semicircle } from "./Circle";
