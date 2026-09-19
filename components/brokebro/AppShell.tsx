@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import {
   LayoutDashboard, Receipt, Wallet, PiggyBank, Users, Sparkles,
   FlaskConical, Trophy, Gift, BarChart3, User, Plus, Search, Zap, Settings,
+  LayoutGrid, Smile, X,
 } from "lucide-react";
 import { cn } from "@/lib/brokebro/format";
 import { useBroke } from "@/lib/brokebro/store";
@@ -45,6 +46,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const path = usePathname();
   const router = useRouter();
   const [cmdk, setCmdk] = useState(false);
+  const [moreOpen, setMore] = useState(false);
   const xp = useBroke((s) => s.xp);
   const streak = useBroke((s) => s.streak);
   const demoMode = useBroke((s) => s.demoMode);
@@ -141,15 +143,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <main className="mx-auto w-full max-w-6xl px-4 pb-28 pt-6 sm:px-6 lg:pl-72 lg:pr-8">{children}</main>
 
       {/* mobile bottom nav */}
-      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-black/85 backdrop-blur-xl lg:hidden" aria-label="Mobile">
-        <div className="mx-auto grid max-w-md grid-cols-5 px-2 pb-[env(safe-area-inset-bottom)] pt-2">
+      <nav className="safe-bottom fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-black/85 backdrop-blur-xl lg:hidden" aria-label="Mobile">
+        <div className="mx-auto grid max-w-md grid-cols-6 px-1.5 pt-2">
           {NAV.map((n) => {
             const active = path === n.href || (n.href !== "/dashboard" && path.startsWith(n.href));
             return (
               <Link
                 key={n.href} href={n.href} aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-2xl px-1 py-2 text-[11px] font-semibold transition-all duration-200 active:scale-95",
+                  "flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-2xl px-0.5 py-2 text-[10px] font-semibold transition-all duration-200 active:scale-95",
                   active ? "bg-lime-300/12 text-lime-200" : "text-white/50"
                 )}
               >
@@ -158,8 +160,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </Link>
             );
           })}
+          <button
+            onClick={() => setMore(true)}
+            aria-label="More features"
+            className={cn(
+              "flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-2xl px-0.5 py-2 text-[10px] font-semibold transition-all duration-200 active:scale-95",
+              moreOpen ? "bg-lime-300/12 text-lime-200" : "text-white/50"
+            )}
+          >
+            <LayoutGrid size={21} />
+            <span className="truncate">More</span>
+          </button>
         </div>
       </nav>
+      <MoreSheet open={moreOpen} onClose={() => setMore(false)} path={path} />
 
       {/* floating quick add (desktop) */}
       <Link href="/expenses?action=add" className="fixed bottom-6 right-6 z-40 hidden h-14 w-14 place-items-center rounded-full bg-gradient-to-br from-lime-300 to-emerald-300 text-black shadow-[0_0_35px_rgba(190,242,100,0.5)] transition hover:scale-105 lg:grid" aria-label="Add expense">
@@ -189,6 +203,69 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+const MORE_FEATURES = [
+  { href: "/afford", label: "Can I Afford This?", sub: "Should you buy it?", icon: Search },
+  { href: "/simulator", label: "What-If Lab", sub: "Play with future", icon: FlaskConical },
+  { href: "/budgets", label: "Budgets", sub: "Guardrails", icon: PiggyBank },
+  { href: "/income", label: "Income Lab", sub: "Side hustles", icon: Wallet },
+  { href: "/wrapped", label: "Money Wrapped", sub: "Monthly stories", icon: Sparkles },
+  { href: "/coach", label: "Money Coach", sub: "Ask anything", icon: Zap },
+  { href: "/analytics", label: "Analytics", sub: "Charts", icon: BarChart3 },
+  { href: "/quests", label: "Money Quests", sub: "XP + streaks", icon: Trophy },
+  { href: "/personality", label: "Personality", sub: "Your money persona", icon: Smile },
+  { href: "/settings", label: "Settings", sub: "App + sync", icon: Settings },
+];
+
+function MoreSheet({ open, onClose, path }: { open: boolean; onClose: () => void; path: string }) {
+  useEffect(() => {
+    const h = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    if (open) window.addEventListener("keydown", h);
+    return () => window.removeEventListener("keydown", h);
+  }, [open, onClose ]);
+
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-[75] grid place-items-end bg-black/60 backdrop-blur-sm lg:hidden" onClick={onClose} role="dialog" aria-modal="true" aria-label="All features">
+      <div
+        className="glass w-full rounded-t-[1.75rem] p-5 pb-[max(1.5rem,env(safe-area-inset-bottom))]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-white/20" />
+        <div className="mb-3 flex items-center justify-between">
+          <h3 className="font-display text-lg font-extrabold">Everything else ✨</h3>
+          <button onClick={onClose} className="rounded-xl p-2 text-white/50 hover:bg-white/5" aria-label="Close features">
+            <X size={17} />
+          </button>
+        </div>
+        <div className="grid max-h-[55dvh] grid-cols-2 gap-2 overflow-y-auto">
+          {MORE_FEATURES.map((f) => {
+            const active = path === f.href || path.startsWith(f.href + "/");
+            return (
+              <Link
+                key={f.href} href={f.href} onClick={onClose}
+                className={cn(
+                  "flex items-center gap-3 rounded-2xl border px-3.5 py-3.5 text-left transition active:scale-[0.98]",
+                  active ? "border-lime-300/40 bg-lime-300/10" : "border-white/10 bg-white/5"
+                )}
+              >
+                <span className={cn("grid h-10 w-10 shrink-0 place-items-center rounded-xl", active ? "bg-lime-300/15 text-lime-200" : "bg-white/8 text-white/70")}>
+                  <f.icon size={18} />
+                </span>
+                <span className="min-w-0">
+                  <b className="block truncate text-sm">{f.label}</b>
+                  <span className="block truncate text-[11px] text-white/45">{f.sub}</span>
+                </span>
+              </Link>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }
