@@ -4,12 +4,17 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   LayoutDashboard, Receipt, Wallet, PiggyBank, Users, Sparkles,
-  FlaskConical, Trophy, Gift, BarChart3, User, Plus, Search, LogOut, Zap,
+  FlaskConical, Trophy, Gift, BarChart3, User, Plus, Search, Zap, Settings,
 } from "lucide-react";
 import { cn } from "@/lib/brokebro/format";
 import { useBroke } from "@/lib/brokebro/store";
 import { CloudSync } from "./CloudSync";
 import { SyncBadge } from "./SyncBadge";
+import { PwaBoot, OfflineBar, UpdateToast, InstallPrompt } from "./Pwa";
+import { QuickAddSheet } from "./QuickAdd";
+import { balanceNow } from "./pwa-events";
+import { useMounted } from "@/lib/brokebro/use-mounted";
+import { fmtMoney } from "@/lib/brokebro/format";
 
 const NAV = [
   { href: "/dashboard", label: "Home", icon: LayoutDashboard },
@@ -33,6 +38,7 @@ const SIDE = [
   { href: "/coach", label: "Money Coach", icon: Zap },
   { href: "/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/personality", label: "Personality", icon: Sparkles },
+  { href: "/settings", label: "Settings", icon: Settings },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -71,6 +77,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-ink text-white">
       <CloudSync />
+      <PwaBoot />
+      <OfflineBar />
+      <UpdateToast />
+      <InstallPrompt />
       {/* desktop sidebar */}
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-white/8 bg-black/50 p-4 backdrop-blur-xl lg:flex" aria-label="Primary">
         <Link href="/" className="flex items-center gap-2.5 rounded-2xl px-2 py-3">
@@ -103,8 +113,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </nav>
         <div className="mt-3 rounded-2xl border border-white/10 bg-white/5 p-3.5 text-sm">
           <div className="flex items-center justify-between text-xs text-white/55">
-            <span className="flex items-center gap-1.5"><Zap size={13} className="text-lime-300" /> {xp} XP</span>
-            <span>🔥 {streak}-day streak</span>
+            <span className="flex items-center gap-1.5" suppressHydrationWarning><Zap size={13} className="text-lime-300" /> {xp} XP</span>
+            <span suppressHydrationWarning>🔥 {streak}-day streak</span>
           </div>
           <div className="mt-2 flex items-center justify-between">
             <SyncBadge />
@@ -114,16 +124,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* mobile top bar */}
-      <header className="sticky top-0 z-40 flex items-center gap-3 border-b border-white/8 bg-ink/85 px-4 py-3 backdrop-blur-xl lg:hidden">
-        <Link href="/" className="flex items-center gap-2">
-          <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-lime-300 to-emerald-400 text-lg font-black text-black">B</span>
-          <span className="font-display text-lg font-extrabold">BrokeBro</span>
-        </Link>
-        <div className="ml-auto flex items-center gap-2 text-xs text-white/60">
-          <SyncBadge compact />
-          <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1">🔥 {streak}</span>
-          <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1">⚡ {xp}</span>
+      <header className="safe-top sticky top-0 z-40 border-b border-white/8 bg-ink/85 backdrop-blur-xl lg:hidden">
+        <div className="flex items-center gap-3 px-4 py-3">
+          <Link href="/" className="flex items-center gap-2" aria-label="BrokeBro home">
+            <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-lime-300 to-emerald-400 text-lg font-black text-black">B</span>
+            <span className="font-display text-lg font-extrabold">BrokeBro</span>
+          </Link>
+          <div className="ml-auto flex items-center gap-2 text-xs text-white/60">
+            <SyncBadge compact />
+            <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1" suppressHydrationWarning>🔥 {streak}</span>
+          </div>
         </div>
+        <MobileBalance />
       </header>
 
       <main className="mx-auto w-full max-w-6xl px-4 pb-28 pt-6 sm:px-6 lg:pl-72 lg:pr-8">{children}</main>
@@ -148,6 +160,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <Plus size={24} strokeWidth={2.5} />
       </Link>
 
+      {/* mobile quick-add bottom sheet */}
+      <QuickAddSheet />
+
       {cmdk && (
         <div className="fixed inset-0 z-50 grid place-items-start justify-center bg-black/70 p-4 pt-[12vh] backdrop-blur-sm" onClick={() => setCmdk(false)} role="dialog" aria-modal="true" aria-label="Command menu">
           <div className="glass w-full max-w-lg overflow-hidden rounded-3xl" onClick={(e) => e.stopPropagation()}>
@@ -168,6 +183,22 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function MobileBalance() {
+  const mounted = useMounted();
+  const txns = useBroke((s) => s.transactions);
+  const cur = useBroke((s) => s.profile.currency);
+  const { balance } = balanceNow();
+  if (!mounted || txns.length === 0) return null;
+  const d = new Date();
+  const greet = d.getHours() < 12 ? "Morning" : d.getHours() < 17 ? "Afternoon" : "Evening";
+  return (
+    <div className="flex items-center justify-between px-4 pb-2.5 text-xs">
+      <span className="text-white/50">Good {greet.toLowerCase()} 👋</span>
+      <span className="font-display font-extrabold text-lime-200">{fmtMoney(balance, cur)} left</span>
     </div>
   );
 }

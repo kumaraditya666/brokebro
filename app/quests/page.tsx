@@ -4,6 +4,7 @@ import { Trophy, Zap, Flame } from "lucide-react";
 import { AppShell } from "@/components/brokebro/AppShell";
 import { Card, Btn, PageHeader, Progress, Badge } from "@/components/brokebro/ui";
 import { QUEST_DEFS, currentMonthTxns, useBroke } from "@/lib/brokebro/store";
+import { afterQuestClaim } from "@/components/brokebro/pwa-events";
 import { monthKey } from "@/lib/brokebro/format";
 
 export default function QuestsPage() {
@@ -14,7 +15,6 @@ export default function QuestsPage() {
   const streak = useBroke((s) => s.streak);
   const claim = useBroke((s) => s.claimQuest);
   const setQ = useBroke((s) => s.setQuestProgress);
-  const notify = useBroke((s) => s.notify);
 
   const logDays = new Set(txns.filter((t) => t.type === "expense").map((t) => t.date.slice(0, 10))).size;
   const savedTotal = goals.reduce((a, g) => a + g.saved, 0);
@@ -61,7 +61,7 @@ export default function QuestsPage() {
                 <div className="mt-2 flex items-center justify-between">
                   <span className="text-xs text-white/50">{Math.min(prog, q.target)}/{q.target} {done ? "— done 🎉" : ""}</span>
                   {done && !claimed ? (
-                    <button onClick={() => { claim(q.id, q.xp); notify("Quest complete!", `${q.title} — +${q.xp} XP. Keep the streak alive.`); }} className="rounded-xl bg-gradient-to-r from-lime-300 to-emerald-300 px-4 py-2 text-xs font-bold text-black">Claim XP</button>
+                    <button onClick={() => { claim(q.id, q.xp); afterQuestClaim(q.title, q.xp); }} className="rounded-xl bg-gradient-to-r from-lime-300 to-emerald-300 px-4 py-2 text-xs font-bold text-black">Claim XP</button>
                   ) : q.check === "manual" ? (
                     <button onClick={() => { setQ(q.id, 1, true); }} className="rounded-xl border border-white/15 px-4 py-2 text-xs font-bold hover:bg-white/5">Mark done</button>
                   ) : null}

@@ -7,6 +7,7 @@ import { EXPENSE_CATEGORIES, PAYMENT_METHODS, type Transaction } from "@/lib/bro
 import { useBroke } from "@/lib/brokebro/store";
 import { extractTransactionFromImage } from "@/lib/brokebro/upi-client";
 import { findDuplicate, type ExistingRef } from "@/lib/brokebro/upi-extract";
+import { afterExpenseSaved } from "./pwa-events";
 import { fmtMoney } from "@/lib/brokebro/format";
 import { supabaseOrNull } from "@/lib/brokebro/supabase";
 
@@ -61,12 +62,15 @@ function toISO(date: string, time: string) {
 }
 
 export function UpiImportFlow({
-  open, onClose, onManual, onViewTransaction,
+  open, onClose, onManual, onViewTransaction, initialFiles, clearInitialFiles,
 }: {
   open: boolean;
   onClose: () => void;
   onManual: () => void;
   onViewTransaction?: (id: string) => void;
+  /** Share-target / external handoff files: processed immediately on open. */
+  initialFiles?: File[] | null;
+  clearInitialFiles?: () => void;
 }) {
   const txns = useBroke((s) => s.transactions);
   const budgets = useBroke((s) => s.budgets);
@@ -89,12 +93,15 @@ export function UpiImportFlow({
     id: t.id, amount: t.amount, date: t.date, note: t.note, category: t.category, transactionId: t.transactionId ?? null,
   }));
 
+  const consumedShare = useRef<string | null>(null);
+
   useEffect(() => {
     if (open) {
       setStage("choose");
       setItems([]);
       setSaved(null);
       setError(null);
+      consumedShare.current = null;
     }
   }, [open ]);
 
@@ -174,6 +181,16 @@ export function UpiImportFlow({
     setStage("review");
   }, [retainShot]);
 
+  // Share-target handoff: process immediately, skip the chooser.
+  useEffect(() => {
+    if (!open || stage !== "choose" || !initialFiles || initialFiles.length === 0) return;
+    const key = initialFiles.map((f) => `${f.name}:${f.size}`).join("|");
+    if (consumedShare.current === key) return;
+    consumedShare.current = key;
+    handleFiles(initialFiles);
+    clearInitialFiles?.();
+  }, [open, stage, initialFiles, handleFiles, clearInitialFiles]);
+
   const dupFor = (it: ItemForm) =>
     findDuplicate(
       { amount: it.amount ? Number(it.amount) : null, date: it.date, merchant: it.merchant || null, transactionId: it.transactionId || null },
@@ -202,6 +219,7 @@ export function UpiImportFlow({
         source: "upi_screenshot",
       };
       add(full);
+      if (full.type === "expense") afterExpenseSaved(full.category);
       total += full.amount;
       if (!firstId) {
         firstId = useBroke.getState().transactions[0]?.id ?? "";
@@ -223,7 +241,7 @@ export function UpiImportFlow({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-black/70 p-4 backdrop-blur-sm" onClick={() => stage !== "processing" && onClose()} role="dialog" aria-modal="true" aria-label="UPI screenshot import">
+    <div className="sheet-mobile fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-black/70 p-4 backdrop-blur-sm" onClick={() => stage !== "processing" && onClose()} role="dialog" aria-modal="true" aria-label="UPI screenshot import">
       <AnimatePresence mode="wait">
         {stage === "choose" && (
           <motion.div key="choose" initial={{ opacity: 0, y: 16, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -10 }} className="glass w-full max-w-md rounded-3xl p-6" onClick={(e) => e.stopPropagation()}>

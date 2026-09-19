@@ -1,0 +1,29 @@
+{
+  "name": "BROKE MUSIC — Your music. One player. Zero bullshit.",
+  "short_name": "BROKE MUSIC",
+  "description": "Ad-free universal music player. Licensed catalogs, local files, playlists. Music without the clutter.",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#050505",
+  "background_color": "#050505",
+  "categories": ["music", "entertainment"],
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "share_target": {
+    "action": "/api/share-target",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url",
+      "files": [{ "name": "screenshot", "accept": ["image/png", "image/jpeg", "image/webp"] }]
+    }
+  }
+}

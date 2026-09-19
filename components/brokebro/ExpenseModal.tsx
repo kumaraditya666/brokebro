@@ -21,7 +21,7 @@ export function ExpenseModal({ initial, onClose, onSave }: { initial: Transactio
   const suggestion = suggestCategory(quick || note);
 
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-black/70 p-4 backdrop-blur-sm" onClick={onClose} role="dialog" aria-modal="true" aria-label="Expense form">
+    <div className="sheet-mobile fixed inset-0 z-50 grid place-items-center bg-black/70 p-4 backdrop-blur-sm" onClick={onClose} role="dialog" aria-modal="true" aria-label="Expense form">
       <form
         className="glass pop-in w-full max-w-md rounded-3xl p-6"
         onClick={(e) => e.stopPropagation()}

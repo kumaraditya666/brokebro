@@ -5,6 +5,7 @@ import { Plus, Trash2, PartyPopper } from "lucide-react";
 import { AppShell } from "@/components/brokebro/AppShell";
 import { Card, Btn, PageHeader, Field, inputCls, Progress, EmptyState } from "@/components/brokebro/ui";
 import { useBroke } from "@/lib/brokebro/store";
+import { afterGoalContribute } from "@/components/brokebro/pwa-events";
 import { calculateGoalETA, calculateGoalProgress } from "@/lib/brokebro/calc";
 import { fmtMoney } from "@/lib/brokebro/format";
 
@@ -47,7 +48,7 @@ export default function GoalsPage() {
                   <div className="mt-2"><Progress value={pct} tone={done ? "lime" : "violet"} /></div>
                   <p className="mt-1.5 text-xs text-white/55">{done ? "Completed — legendary. 🏆" : `${Math.round(pct)}% · ${fmtMoney(remaining, cur)} left · ${eta.label} at ₹1k/mo`}</p>
                   {!done && (
-                    <form className="mt-3 flex gap-2" onSubmit={(e) => { e.preventDefault(); const v = Number(amt[g.id]); if (!v || v <= 0) return; contribute(g.id, Math.round(v)); const ng = g.saved + v; if (ng >= g.target) setCheer(g.name); setAmt((s) => ({ ...s, [g.id]: "" })); }}>
+                    <form className="mt-3 flex gap-2" onSubmit={(e) => { e.preventDefault(); const v = Number(amt[g.id]); if (!v || v <= 0) return; contribute(g.id, Math.round(v)); afterGoalContribute(g.id); const ng = g.saved + v; if (ng >= g.target) setCheer(g.name); setAmt((s) => ({ ...s, [g.id]: "" })); }}>
                       <input value={amt[g.id] ?? ""} onChange={(e) => setAmt((s) => ({ ...s, [g.id]: e.target.value }))} placeholder="Add ₹500" inputMode="decimal" className={inputCls} aria-label={`Contribute to ${g.name}`} />
                       <Btn type="submit">Add</Btn>
                     </form>

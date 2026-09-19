@@ -110,10 +110,14 @@ export async function pushCloud(sb: SupabaseClient, userId: string) {
     );
     if (pErr) throw new Error(`profiles: ${pErr.message}`);
 
-    // transactions: upsert uuid rows, insert local-id rows then remap
+    // Idempotent outbox: every row carries its stable client_key. Retries of the
+    // same local row UPSERT on (user_id, client_key) — duplicates impossible.
+    // UUID rows (already pushed+remapped) upsert on id; local rows upsert on
+    // client_key, then remap the local id to the returned UUID.
     for (const t of s.transactions.slice(0, 500)) {
       const row = {
         user_id: userId,
+        client_key: t.id, // stable client id = idempotency key
         type: t.type,
         amount: t.amount,
         category: t.category,
@@ -130,31 +134,43 @@ export async function pushCloud(sb: SupabaseClient, userId: string) {
         const { error } = await sb.from("transactions").upsert({ id: t.id, ...row }, { onConflict: "id" });
         if (error) throw new Error(`transactions: ${error.message}`);
       } else {
-        const { data, error } = await sb.from("transactions").insert(row).select("id").single();
+        const { data, error } = await sb
+          .from("transactions")
+          .upsert(row, { onConflict: "user_id,client_key" })
+          .select("id")
+          .single();
         if (error) throw new Error(`transactions: ${error.message}`);
         if (data?.id) useBroke.getState().remapId("txn", t.id, String(data.id));
       }
     }
 
     for (const b of s.budgets) {
-      const row = { user_id: userId, scope: b.scope, category: b.category, limit_amount: b.limit, period_key: b.periodKey };
+      const row = { user_id: userId, client_key: b.id, scope: b.scope, category: b.category, limit_amount: b.limit, period_key: b.periodKey };
       if (isUuid(b.id)) {
         const { error } = await sb.from("budgets").upsert({ id: b.id, ...row }, { onConflict: "id" });
         if (error) throw new Error(`budgets: ${error.message}`);
       } else {
-        const { data, error } = await sb.from("budgets").insert(row).select("id").single();
+        const { data, error } = await sb
+          .from("budgets")
+          .upsert(row, { onConflict: "user_id,client_key" })
+          .select("id")
+          .single();
         if (error) throw new Error(`budgets: ${error.message}`);
         if (data?.id) useBroke.getState().remapId("bud", b.id, String(data.id));
       }
     }
 
     for (const g of s.goals) {
-      const row = { user_id: userId, name: g.name, kind: g.kind, target: g.target, saved: g.saved, target_date: g.targetDate ?? null };
+      const row = { user_id: userId, client_key: g.id, name: g.name, kind: g.kind, target: g.target, saved: g.saved, target_date: g.targetDate ?? null };
       if (isUuid(g.id)) {
         const { error } = await sb.from("savings_goals").upsert({ id: g.id, ...row }, { onConflict: "id" });
         if (error) throw new Error(`savings_goals: ${error.message}`);
       } else {
-        const { data, error } = await sb.from("savings_goals").insert(row).select("id").single();
+        const { data, error } = await sb
+          .from("savings_goals")
+          .upsert(row, { onConflict: "user_id,client_key" })
+          .select("id")
+          .single();
         if (error) throw new Error(`savings_goals: ${error.message}`);
         if (data?.id) useBroke.getState().remapId("goal", g.id, String(data.id));
       }

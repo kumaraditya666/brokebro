@@ -8,6 +8,16 @@ import { monthKey, uid } from "./format";
 export interface QuestProgress { questId: string; progress: number; done: boolean; xpClaimed: boolean; }
 export interface AppNotification { id: string; title: string; body: string; at: string; read: boolean; }
 
+export type ThemePref = "dark" | "light" | "system";
+
+export interface Prefs {
+  theme: ThemePref;
+  notifs: { budgets: boolean; goals: boolean; quests: boolean; recaps: boolean };
+  notifSeen: Record<string, number>;
+  visits: number;
+  installDismissedAt: number | null;
+}
+
 interface BrokeState {
   profile: Profile;
   transactions: Transaction[];
@@ -23,6 +33,7 @@ interface BrokeState {
   demoMode: boolean;
   _hydrated: boolean;
   cloud: { status: "local" | "syncing" | "synced" | "error"; error: string | null; userId: string | null };
+  prefs: Prefs;
 
   setProfile: (p: Partial<Profile>) => void;
   addTransaction: (t: Omit<Transaction, "id">) => void;
@@ -43,6 +54,11 @@ interface BrokeState {
   clearDemo: () => void;
   resetAll: () => void;
   setCloud: (c: Partial<{ status: "local" | "syncing" | "synced" | "error"; error: string | null; userId: string | null }>) => void;
+  setPrefs: (p: Partial<Prefs>) => void;
+  setNotifPref: (k: keyof Prefs["notifs"], v: boolean) => void;
+  markNotifSeen: (k: string) => void;
+  bumpVisit: () => void;
+  dismissInstall: () => void;
   importCloud: (d: {
     profile?: Partial<Profile>;
     transactions?: Transaction[];
@@ -70,6 +86,14 @@ export const QUEST_DEFS = [
   { id: "q_no_drink", title: "No random drinks week", desc: "Zero cafe/boba splurges for 7 days", xp: 50, badge: "🧋", check: "manual", target: 1 },
 ];
 
+export function applyTheme(theme: ThemePref) {
+  if (typeof document === "undefined") return;
+  const light =
+    theme === "light" ||
+    (theme === "system" && window.matchMedia("(prefers-color-scheme: light)").matches);
+  document.documentElement.classList.toggle("theme-light", light);
+}
+
 export const useBroke = create<BrokeState>()(
   persist(
     (set, get) => ({
@@ -87,6 +111,13 @@ export const useBroke = create<BrokeState>()(
       demoMode: false,
       _hydrated: true,
       cloud: { status: "local", error: null, userId: null },
+      prefs: {
+        theme: "dark",
+        notifs: { budgets: true, goals: true, quests: false, recaps: true },
+        notifSeen: {},
+        visits: 0,
+        installDismissedAt: null,
+      },
 
       setProfile: (p) => set((s) => ({ profile: { ...s.profile, ...p } })),
       addTransaction: (t) =>
@@ -191,6 +222,14 @@ export const useBroke = create<BrokeState>()(
           return { goals: s.goals.map((g) => (g.id === oldId ? { ...g, id: newId } : g)) };
         }),
       setCloud: (c) => set((s) => ({ cloud: { ...s.cloud, ...c } })),
+      setPrefs: (p) => {
+        set((s) => ({ prefs: { ...s.prefs, ...p } }));
+        applyTheme(useBroke.getState().prefs.theme);
+      },
+      setNotifPref: (k, v) => set((s) => ({ prefs: { ...s.prefs, notifs: { ...s.prefs.notifs, [k]: v } } })),
+      markNotifSeen: (k) => set((s) => ({ prefs: { ...s.prefs, notifSeen: { ...s.prefs.notifSeen, [k]: Date.now() } } })),
+      bumpVisit: () => set((s) => ({ prefs: { ...s.prefs, visits: s.prefs.visits + 1 } })),
+      dismissInstall: () => set((s) => ({ prefs: { ...s.prefs, installDismissedAt: Date.now() } })),
     }),
     { name: "brokebro-v1", version: 1 }
   )

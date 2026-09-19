@@ -2,10 +2,18 @@
 import { useState } from "react";
 import { Cloud, CloudOff, Loader2, TriangleAlert } from "lucide-react";
 import { useBroke } from "@/lib/brokebro/store";
+import { useMounted } from "@/lib/brokebro/use-mounted";
 import { syncNow } from "@/lib/brokebro/sync";
+
+const LOCAL_FALLBACK = (
+  <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-semibold text-white/45" title="Running on this device only. Log in with Supabase keys configured to sync.">
+    <CloudOff size={12} /> Local
+  </span>
+);
 
 /** Visible cloud status. Click to retry a failed sync. */
 export function SyncBadge({ compact }: { compact?: boolean }) {
+  const mounted = useMounted();
   const cloud = useBroke((s) => s.cloud);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
@@ -22,7 +30,10 @@ export function SyncBadge({ compact }: { compact?: boolean }) {
     setBusy(false);
   };
 
-  if (cloud.status === "local") {
+  // Persisted cloud state only exists on the client — server always renders the
+  // local badge, so hold the identical fallback until mounted (no flash for guests).
+  if (!mounted || cloud.status === "local") {
+    if (!mounted) return LOCAL_FALLBACK;
     return (
       <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-semibold text-white/45" title="Running on this device only. Log in with Supabase keys configured to sync.">
         <CloudOff size={12} /> {compact ? "Local" : "Local only"}

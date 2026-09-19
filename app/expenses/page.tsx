@@ -1,11 +1,12 @@
 "use client";
-import { Suspense, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Plus, Search, Trash2, Pencil, ScanLine } from "lucide-react";
 import { AppShell } from "@/components/brokebro/AppShell";
 import { Card, Btn, EmptyState, PageHeader, inputCls, Badge } from "@/components/brokebro/ui";
 import { ExpenseModal, catEmoji } from "@/components/brokebro/ExpenseModal";
 import { UpiImportFlow } from "@/components/brokebro/UpiImport";
+import { afterExpenseSaved } from "@/components/brokebro/pwa-events";
 import { EXPENSE_CATEGORIES, type Transaction } from "@/lib/brokebro/types";
 import { useBroke } from "@/lib/brokebro/store";
 import { fmtMoney } from "@/lib/brokebro/format";
@@ -26,10 +27,26 @@ function ExpensesInner() {
   const cur = useBroke((s) => s.profile.currency);
   const params = useSearchParams();
   const [show, setShow] = useState(false);
-  const [chooser, setChooser] = useState(params.get("action") === "add");
+  const [chooser, setChooser] = useState(params.get("action") === "add" || params.get("shared") === "1" || params.get("shared") === "bad");
   const [q, setQ] = useState("");
   const [cat, setCat] = useState("All");
   const [editing, setEditing] = useState<Transaction | null>(null);
+  const [sharedFiles, setSharedFiles] = useState<File[] | null>(null);
+
+  // Web Share Target pickup: Gallery → Share → BrokeBro lands here.
+  useEffect(() => {
+    if (params.get("shared") !== "1") return;
+    fetch("/api/share-target", { credentials: "same-origin" })
+      .then(async (r) => {
+        if (!r.ok) return;
+        const blob = await r.blob();
+        if (!blob.size) return;
+        setSharedFiles([new File([blob], "shared-screenshot", { type: blob.type || "image/jpeg" })]);
+        setChooser(true);
+      })
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const openAdd = () => {
     setEditing(null);
@@ -92,6 +109,8 @@ function ExpensesInner() {
       <UpiImportFlow
         open={chooser}
         onClose={() => setChooser(false)}
+        initialFiles={sharedFiles}
+        clearInitialFiles={() => setSharedFiles(null)}
         onManual={() => { setEditing(null); setShow(true); }}
         onViewTransaction={(id) => {
           const t = useBroke.getState().transactions.find((x) => x.id === id);
@@ -106,7 +125,7 @@ function ExpensesInner() {
         <ExpenseModal
           initial={editing}
           onClose={() => { setShow(false); setEditing(null); }}
-          onSave={(v) => { if (editing) update(editing.id, v); else add({ ...v, type: "expense", source: "manual" }); setShow(false); setEditing(null); }}
+          onSave={(v) => { if (editing) update(editing.id, v); else { add({ ...v, type: "expense", source: "manual" }); afterExpenseSaved(v.category); } setShow(false); setEditing(null); }}
         />
       )}
     </AppShell>
