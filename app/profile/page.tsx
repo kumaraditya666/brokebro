@@ -1,6 +1,7 @@
 "use client";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { LogOut, Trash2, Sparkles, Bell } from "lucide-react";
+import { LogOut, Trash2, Sparkles, Bell, LogIn, Cloud } from "lucide-react";
 import { AppShell } from "@/components/brokebro/AppShell";
 import { Card, Btn, PageHeader, Badge, EmptyState } from "@/components/brokebro/ui";
 import { QUEST_DEFS, useBroke } from "@/lib/brokebro/store";
@@ -19,6 +20,7 @@ export default function ProfilePage() {
   const clearDemo = useBroke((s) => s.clearDemo);
   const resetAll = useBroke((s) => s.resetAll);
   const router = useRouter();
+  const cloudUser = useBroke((s) => s.cloud.userId);
   const doneGoals = goals.filter((g) => g.saved >= g.target && g.target > 0).length;
 
   const logout = async () => {
@@ -31,6 +33,29 @@ export default function ProfilePage() {
   return (
     <AppShell>
       <PageHeader kicker="Profile" title={profile.name ? `${profile.name}'s vault` : "Profile"} sub="XP, badges, streaks, completed goals. Balances stay private — share only vibes." />
+
+      {!cloudUser ? (
+        <Card glow className="mb-4 bg-gradient-to-br from-lime-300/12 via-transparent to-violet-500/10">
+          <div className="flex flex-wrap items-center gap-4">
+            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-lime-300 to-emerald-400 text-black">
+              <LogIn size={22} />
+            </span>
+            <div className="min-w-[200px] flex-1">
+              <h3 className="font-display text-lg font-extrabold">Log in to sync across devices ☁</h3>
+              <p className="mt-0.5 text-sm text-white/55">You&apos;re a guest right now — everything lives only on this device. Same account on phone + laptop = same money.</p>
+            </div>
+            <Link href="/login" className="inline-flex min-h-[48px] items-center justify-center gap-2 whitespace-nowrap rounded-2xl bg-gradient-to-r from-lime-300 to-emerald-300 px-7 py-3 text-sm font-bold text-black shadow-[0_0_25px_rgba(190,242,100,0.35)]">
+              <LogIn size={16} /> Log in / Sign up
+            </Link>
+          </div>
+        </Card>
+      ) : (
+        <div className="mb-4 flex items-center gap-2 text-sm text-white/60">
+          <Badge tone="lime"><Cloud size={12} className="mr-1 inline" /> Cloud sync on</Badge>
+          <span className="text-xs">Signed in — your data follows you across devices.</span>
+        </div>
+      )}
+
       <div className="grid gap-4 lg:grid-cols-3">
         <Card glow>
           <div className="grid h-16 w-16 place-items-center rounded-3xl bg-gradient-to-br from-lime-300 to-emerald-400 text-2xl font-black text-black">{(profile.name || "B")[0].toUpperCase()}</div>

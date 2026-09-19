@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Bell, Download, Palette, RefreshCw, Trash2, Cloud, HardDrive, TriangleAlert } from "lucide-react";
 import { AppShell } from "@/components/brokebro/AppShell";
@@ -179,6 +180,11 @@ export default function SettingsPage() {
           <p className="mb-2 font-mono text-[11px] text-white/45">
             {cloud.userId ? `signed in · id ${cloud.userId.slice(0, 8)}… · status ${cloud.status}` : "guest mode — log in to sync across devices"}
           </p>
+          {!cloud.userId && (
+            <Link href="/login" className="mb-3 inline-flex min-h-[44px] items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-lime-300 to-emerald-300 px-6 py-2.5 text-sm font-bold text-black">
+              Log in / Sign up
+            </Link>
+          )}
           <div className="flex flex-wrap items-center gap-2">
             <SyncBadge />
             {pending > 0 && <Badge tone="violet">📥 {pending} pending upload</Badge>}
