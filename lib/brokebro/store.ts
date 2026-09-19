@@ -22,6 +22,7 @@ interface BrokeState {
   notifications: AppNotification[];
   demoMode: boolean;
   _hydrated: boolean;
+  cloud: { status: "local" | "syncing" | "synced" | "error"; error: string | null; userId: string | null };
 
   setProfile: (p: Partial<Profile>) => void;
   addTransaction: (t: Omit<Transaction, "id">) => void;
@@ -41,6 +42,7 @@ interface BrokeState {
   loadDemo: () => void;
   clearDemo: () => void;
   resetAll: () => void;
+  setCloud: (c: Partial<{ status: "local" | "syncing" | "synced" | "error"; error: string | null; userId: string | null }>) => void;
   importCloud: (d: {
     profile?: Partial<Profile>;
     transactions?: Transaction[];
@@ -84,6 +86,7 @@ export const useBroke = create<BrokeState>()(
       notifications: [],
       demoMode: false,
       _hydrated: true,
+      cloud: { status: "local", error: null, userId: null },
 
       setProfile: (p) => set((s) => ({ profile: { ...s.profile, ...p } })),
       addTransaction: (t) =>
@@ -187,6 +190,7 @@ export const useBroke = create<BrokeState>()(
           if (kind === "bud") return { budgets: s.budgets.map((b) => (b.id === oldId ? { ...b, id: newId } : b)) };
           return { goals: s.goals.map((g) => (g.id === oldId ? { ...g, id: newId } : g)) };
         }),
+      setCloud: (c) => set((s) => ({ cloud: { ...s.cloud, ...c } })),
     }),
     { name: "brokebro-v1", version: 1 }
   )

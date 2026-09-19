@@ -20,6 +20,11 @@ export interface Transaction {
   date: string; // ISO
   paymentMethod: string;
   recurring?: boolean;
+  /** UPI-import provenance. Absent = manual. */
+  merchant?: string | null;
+  status?: string | null;
+  transactionId?: string | null; // UTR / txn ref — never shown in social features
+  source?: "manual" | "upi_screenshot" | "other";
 }
 
 export interface Budget {

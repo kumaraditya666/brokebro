@@ -1,10 +1,11 @@
 "use client";
 import { Suspense, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Plus, Search, Trash2, Pencil } from "lucide-react";
+import { Plus, Search, Trash2, Pencil, ScanLine } from "lucide-react";
 import { AppShell } from "@/components/brokebro/AppShell";
-import { Card, Btn, EmptyState, PageHeader, inputCls } from "@/components/brokebro/ui";
+import { Card, Btn, EmptyState, PageHeader, inputCls, Badge } from "@/components/brokebro/ui";
 import { ExpenseModal, catEmoji } from "@/components/brokebro/ExpenseModal";
+import { UpiImportFlow } from "@/components/brokebro/UpiImport";
 import { EXPENSE_CATEGORIES, type Transaction } from "@/lib/brokebro/types";
 import { useBroke } from "@/lib/brokebro/store";
 import { fmtMoney } from "@/lib/brokebro/format";
@@ -24,22 +25,35 @@ function ExpensesInner() {
   const del = useBroke((s) => s.deleteTransaction);
   const cur = useBroke((s) => s.profile.currency);
   const params = useSearchParams();
-  const [show, setShow] = useState(params.get("action") === "add");
+  const [show, setShow] = useState(false);
+  const [chooser, setChooser] = useState(params.get("action") === "add");
   const [q, setQ] = useState("");
   const [cat, setCat] = useState("All");
   const [editing, setEditing] = useState<Transaction | null>(null);
+
+  const openAdd = () => {
+    setEditing(null);
+    setChooser(true);
+  };
 
   const expenses = useMemo(() => {
     return txns
       .filter((t) => t.type === "expense")
       .filter((t) => (cat === "All" ? true : t.category === cat))
-      .filter((t) => (q ? `${t.note} ${t.category} ${t.amount}`.toLowerCase().includes(q.toLowerCase()) : true));
+      .filter((t) => (q ? `${t.note} ${t.category} ${t.amount} ${t.transactionId ?? ""}`.toLowerCase().includes(q.toLowerCase()) : true));
   }, [txns, q, cat]);
 
   return (
     <AppShell>
       <PageHeader kicker="Money" title="Expense tracker" sub="5-second logging. Type “₹250 Zomato” and we guess the category — you always have the final say."
-        right={<Btn onClick={() => { setEditing(null); setShow(true); }}><Plus size={15} /> Add expense</Btn>} />
+        right={
+          <div className="flex gap-2">
+            <button onClick={() => setChooser(true)} className="inline-flex items-center gap-2 rounded-2xl border border-lime-300/30 bg-lime-300/10 px-4 py-3 text-sm font-bold text-lime-200 transition hover:bg-lime-300/20" aria-label="Scan payment screenshot">
+              <ScanLine size={16} /> 📸 Scan
+            </button>
+            <Btn onClick={openAdd}><Plus size={15} /> Add expense</Btn>
+          </div>
+        } />
       <div className="mb-4 flex flex-wrap gap-2">
         <div className="relative min-w-[220px] flex-1">
           <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/35" />
@@ -52,7 +66,7 @@ function ExpensesInner() {
       </div>
 
       {expenses.length === 0 ? (
-        <EmptyState emoji="🧾" title="No expenses yet" body="Your wallet is suspiciously clean 👀 — add your first expense to wake up the dashboard." action={<Btn onClick={() => setShow(true)}>+ Add your first expense</Btn>} />
+        <EmptyState emoji="🧾" title="No expenses yet" body="Your wallet is suspiciously clean 👀 — add your first expense to wake up the dashboard." action={<Btn onClick={openAdd}>+ Add your first expense</Btn>} />
       ) : (
         <div className="grid gap-3 sm:grid-cols-2">
           {expenses.map((t) => (
@@ -61,28 +75,40 @@ function ExpensesInner() {
                 <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-white/8 text-xl">{catEmoji(t.category)}</span>
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-semibold">{t.note || t.category}</p>
-                  <p className="mt-0.5 text-xs text-white/45">{t.category} · {t.paymentMethod} · {t.date.slice(0, 10)}{t.recurring ? " · 🔁 recurring" : ""}</p>
+                  <p className="mt-0.5 text-xs text-white/45">{t.category} · {t.paymentMethod} · {t.date.slice(0, 10)}{t.recurring ? " · 🔁 recurring" : ""}{t.source === "upi_screenshot" ? " · 📸 screenshot" : ""}</p>
                 </div>
                 <p className="font-display text-lg font-extrabold">−{fmtMoney(t.amount, cur)}</p>
               </div>
-              <div className="mt-3 flex gap-2">
+              <div className="mt-3 flex items-center gap-2">
                 <button onClick={() => { setEditing(t); setShow(true); }} className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 px-3 py-1.5 text-xs font-semibold text-white/70 hover:bg-white/5" aria-label={`Edit ${t.note}`}><Pencil size={13} /> Edit</button>
                 <button onClick={() => del(t.id)} className="inline-flex items-center gap-1.5 rounded-xl border border-red-500/20 px-3 py-1.5 text-xs font-semibold text-red-300 hover:bg-red-500/10" aria-label={`Delete ${t.note}`}><Trash2 size={13} /> Delete</button>
+                {t.source === "upi_screenshot" && <Badge tone="muted">📸 UPI import</Badge>}
               </div>
             </Card>
           ))}
         </div>
       )}
 
+      <UpiImportFlow
+        open={chooser}
+        onClose={() => setChooser(false)}
+        onManual={() => { setEditing(null); setShow(true); }}
+        onViewTransaction={(id) => {
+          const t = useBroke.getState().transactions.find((x) => x.id === id);
+          if (t) {
+            setQ(t.merchant || t.note || String(t.amount));
+            setCat("All");
+          }
+        }}
+      />
+
       {show && (
         <ExpenseModal
           initial={editing}
           onClose={() => { setShow(false); setEditing(null); }}
-          onSave={(v) => { if (editing) update(editing.id, v); else add({ ...v, type: "expense" }); setShow(false); setEditing(null); }}
+          onSave={(v) => { if (editing) update(editing.id, v); else add({ ...v, type: "expense", source: "manual" }); setShow(false); setEditing(null); }}
         />
       )}
     </AppShell>
   );
 }
-
-

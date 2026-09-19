@@ -1,37 +1,61 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { supabaseOrNull } from "@/lib/brokebro/supabase";
 import { pullCloud, pushCloud } from "@/lib/brokebro/sync";
 import { useBroke } from "@/lib/brokebro/store";
 
 /**
  * Mount once (in AppShell): if Supabase is configured + user is signed in,
- * pull cloud state on login and push local changes (debounced 2.5s).
- * Silent failures → stays local-first, never blocks the UI.
+ * pull cloud state on login (MERGED with local — never wipes) and push local
+ * changes (debounced 2.5s). Failures set a visible status instead of vanishing.
  */
 export function CloudSync() {
-  const [userId, setUserId] = useState<string | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const lastPush = useRef(0);
 
   useEffect(() => {
     const sb = supabaseOrNull();
-    if (!sb) return;
+    const setCloud = useBroke.getState().setCloud;
+    if (!sb) {
+      setCloud({ status: "local", userId: null, error: null });
+      return;
+    }
     let alive = true;
-    sb.auth.getSession().then(({ data }) => {
+    const boot = async () => {
+      const { data } = await sb.auth.getSession();
       if (!alive) return;
       const id = data.session?.user?.id ?? null;
-      setUserId(id);
-      if (id) pullCloud(sb, id).catch(() => {});
-    });
-    const { data: sub } = sb.auth.onAuthStateChange((_ev, session) => {
+      if (!id) {
+        setCloud({ status: "local", userId: null, error: null });
+        return;
+      }
+      setCloud({ status: "syncing", userId: id, error: null });
+      try {
+        await pullCloud(sb, id);
+        if (!alive) return;
+        setCloud({ status: "synced", error: null });
+      } catch (e) {
+        if (!alive) return;
+        const msg = e instanceof Error ? e.message : "Sync failed.";
+        setCloud({ status: "error", error: msg });
+        console.error("[BrokeBro] cloud pull failed:", msg);
+      }
+    };
+    boot();
+    const { data: sub } = sb.auth.onAuthStateChange(async (ev, session) => {
       const id = session?.user?.id ?? null;
-      setUserId(id);
-      if (id) {
-        const sb2 = supabaseOrNull();
-        if (sb2) pullCloud(sb2, id).catch(() => {});
-      } else {
+      if (ev === "SIGNED_OUT" || !id) {
         useBroke.getState().resetAll();
+        useBroke.getState().setCloud({ status: "local", userId: null, error: null });
+        return;
+      }
+      useBroke.getState().setCloud({ status: "syncing", userId: id, error: null });
+      try {
+        await pullCloud(sb, id);
+        useBroke.getState().setCloud({ status: "synced", error: null });
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : "Sync failed.";
+        useBroke.getState().setCloud({ status: "error", error: msg });
+        console.error("[BrokeBro] cloud pull failed:", msg);
       }
     });
     return () => {
@@ -41,18 +65,29 @@ export function CloudSync() {
   }, []);
 
   useEffect(() => {
-    if (!userId) return;
-    const unsub = useBroke.subscribe(() => {
+    // Data signature: status-only flips (syncing→synced) must NOT retrigger pushes.
+    const sig = { current: "" };
+    const snapshot = (s: ReturnType<typeof useBroke.getState>) =>
+      JSON.stringify([s.profile, s.transactions, s.budgets, s.goals]);
+    const unsub = useBroke.subscribe((s) => {
+      if (!s.cloud.userId) return; // guest: nothing to push
+      const cur = snapshot(s);
+      if (cur === sig.current) return;
       if (timer.current) clearTimeout(timer.current);
       timer.current = setTimeout(async () => {
-        if (Date.now() - lastPush.current < 2000) return;
-        lastPush.current = Date.now();
         const sb = supabaseOrNull();
-        if (!sb) return;
+        const st = useBroke.getState();
+        if (!sb || !st.cloud.userId) return;
+        st.setCloud({ status: "syncing", error: null });
         try {
-          await pushCloud(sb, userId);
-        } catch {
-          /* stay local-first */
+          await pushCloud(sb, st.cloud.userId);
+          const fresh = useBroke.getState();
+          sig.current = snapshot(fresh); // includes post-push id remaps
+          fresh.setCloud({ status: "synced", error: null });
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : "Sync failed.";
+          useBroke.getState().setCloud({ status: "error", error: msg });
+          console.error("[BrokeBro] cloud push failed:", msg);
         }
       }, 2500);
     });
@@ -60,7 +95,7 @@ export function CloudSync() {
       unsub();
       if (timer.current) clearTimeout(timer.current);
     };
-  }, [userId]);
+  }, []);
 
   return null;
 }

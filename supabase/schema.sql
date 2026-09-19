@@ -5,7 +5,7 @@ create extension if not exists "pgcrypto";
 
 -- Profiles (1 per auth user)
 create table if not exists profiles (
-  user_id uuid primary references auth.users(id) on delete cascade,
+  user_id uuid primary key references auth.users(id) on delete cascade,
   name text not null default '',
   currency text not null default 'INR',
   monthly_income numeric not null default 0,

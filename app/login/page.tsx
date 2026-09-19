@@ -24,13 +24,20 @@ export default function LoginPage() {
     if (sb) {
       try {
         if (mode === "up") {
-          const { error } = await sb.auth.signUp({
+          const { data, error } = await sb.auth.signUp({
             email,
             password,
             options: { data: { name: name.trim() || "Friend" } },
           });
           if (error) throw error;
           if (name.trim()) setProfile({ name: name.trim(), onboarded: false });
+          if (!data.session) {
+            // Supabase "Confirm email" is ON: user exists in Auth dashboard but
+            // there is NO session — sync stays local until they confirm + log in.
+            setMode("in");
+            setMsg("Account created! 📧 Click the confirmation link in your email, then LOG IN below — sync turns on after login, not before.");
+            return;
+          }
           setMsg("Account created — you're signed in. Syncing is now ON (cloud saves across devices).");
           router.push("/onboarding");
         } else {

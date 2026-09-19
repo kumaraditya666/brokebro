@@ -9,6 +9,7 @@ import {
 import { cn } from "@/lib/brokebro/format";
 import { useBroke } from "@/lib/brokebro/store";
 import { CloudSync } from "./CloudSync";
+import { SyncBadge } from "./SyncBadge";
 
 const NAV = [
   { href: "/dashboard", label: "Home", icon: LayoutDashboard },
@@ -105,7 +106,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <span className="flex items-center gap-1.5"><Zap size={13} className="text-lime-300" /> {xp} XP</span>
             <span>🔥 {streak}-day streak</span>
           </div>
-          <Link href="/quests" className="mt-2 block text-center text-xs font-bold text-lime-200 hover:underline">View quests →</Link>
+          <div className="mt-2 flex items-center justify-between">
+            <SyncBadge />
+            <Link href="/quests" className="text-xs font-bold text-lime-200 hover:underline">View quests →</Link>
+          </div>
         </div>
       </aside>
 
@@ -116,6 +120,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <span className="font-display text-lg font-extrabold">BrokeBro</span>
         </Link>
         <div className="ml-auto flex items-center gap-2 text-xs text-white/60">
+          <SyncBadge compact />
           <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1">🔥 {streak}</span>
           <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1">⚡ {xp}</span>
         </div>
