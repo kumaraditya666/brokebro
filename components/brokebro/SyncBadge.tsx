@@ -21,13 +21,20 @@ export function SyncBadge({ compact }: { compact?: boolean }) {
   const retry = async () => {
     setBusy(true);
     setNote(null);
-    const r = await syncNow();
-    if (r.ok) useBroke.getState().setCloud({ status: "synced", error: null });
-    else {
-      useBroke.getState().setCloud({ status: "error", error: r.message });
-      setNote(r.message);
+    try {
+      const r = await syncNow();
+      if (r.ok) useBroke.getState().setCloud({ status: "synced", error: null });
+      else {
+        useBroke.getState().setCloud({ status: "error", error: r.message });
+        setNote(r.message);
+      }
+    } catch (e) {
+      const m = e instanceof Error ? e.message : "Sync crashed unexpectedly.";
+      useBroke.getState().setCloud({ status: "error", error: m });
+      setNote(m);
+    } finally {
+      setBusy(false);
     }
-    setBusy(false);
   };
 
   // Persisted cloud state only exists on the client — server always renders the

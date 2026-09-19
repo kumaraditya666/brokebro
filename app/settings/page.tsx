@@ -170,15 +170,32 @@ export default function SettingsPage() {
         </Section>
 
         <Section icon={<Cloud size={17} className="text-emerald-300" />} title="Sync Status" sub="Local-first: works offline, syncs when online. Retries are idempotent.">
+          <p className="mb-2 font-mono text-[11px] text-white/45">
+            {cloud.userId ? `signed in · id ${cloud.userId.slice(0, 8)}… · status ${cloud.status}` : "guest mode — log in to sync across devices"}
+          </p>
           <div className="flex flex-wrap items-center gap-2">
             <SyncBadge />
             {pending > 0 && <Badge tone="violet">📥 {pending} pending upload</Badge>}
             <button
-              onClick={async () => { setBusy(true); const r = await syncNow(); setMsg(r.message); if (r.ok) useBroke.getState().setCloud({ status: "synced", error: null }); setBusy(false); }}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-white/15 px-4 py-2 text-xs font-bold hover:bg-white/5"
+              onClick={async () => {
+                setBusy(true);
+                setMsg(null);
+                try {
+                  const r = await syncNow();
+                  setMsg(r.message);
+                  if (r.ok) useBroke.getState().setCloud({ status: "synced", error: null });
+                } catch (e) {
+                  const m = e instanceof Error ? e.message : "Sync crashed unexpectedly.";
+                  setMsg(m);
+                  useBroke.getState().setCloud({ status: "error", error: m });
+                } finally {
+                  setBusy(false); // never leave the button dead
+                }
+              }}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-white/15 px-4 py-2 text-xs font-bold hover:bg-white/5 disabled:opacity-50"
               disabled={busy}
             >
-              <RefreshCw size={13} /> Sync now
+              <RefreshCw size={13} /> {busy ? "Working…" : "Sync now"}
             </button>
           </div>
           {cloud.error && <p className="mt-2 text-xs text-amber-200/80">{cloud.error}</p>}
