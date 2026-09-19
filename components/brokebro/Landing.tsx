@@ -28,20 +28,20 @@ export function Landing() {
             <motion.div {...fade}>
               <Badge>✨ built for campus chaos</Badge>
             </motion.div>
-            <motion.h1 {...fade} transition={{ ...fade.transition, delay: 0.05 }} className="font-display mt-5 text-5xl font-extrabold leading-[1.02] tracking-tight sm:text-6xl lg:text-7xl">
+            <motion.h1 {...fade} transition={{ ...fade.transition, delay: 0.05 }} className="font-display mt-5 text-4xl font-extrabold leading-[1.02] tracking-tight sm:text-6xl lg:text-7xl">
               BrokeBro
-              <span className="block bg-gradient-to-r from-lime-200 via-emerald-200 to-cyan-200 bg-clip-text text-4xl text-transparent sm:text-5xl lg:text-6xl">
+              <span className="block bg-gradient-to-r from-lime-200 via-emerald-200 to-cyan-200 bg-clip-text text-3xl text-transparent sm:text-5xl lg:text-6xl">
                 Know where your money disappears.
               </span>
             </motion.h1>
-            <motion.p {...fade} transition={{ ...fade.transition, delay: 0.1 }} className="mt-5 max-w-md text-lg text-white/60">
+            <motion.p {...fade} transition={{ ...fade.transition, delay: 0.1 }} className="mt-5 max-w-md text-base text-white/60 sm:text-lg">
               Your money. Your chaos. Finally organized. Budgeting, splits, quests & a Money Wrapped — minus the boring bank vibes.
             </motion.p>
-            <motion.div {...fade} transition={{ ...fade.transition, delay: 0.15 }} className="mt-8 flex flex-wrap gap-3">
-              <Link href="/dashboard" className="group inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-lime-300 to-emerald-300 px-7 py-4 font-bold text-black shadow-[0_0_35px_rgba(190,242,100,0.4)] transition hover:-translate-y-0.5">
+            <motion.div {...fade} transition={{ ...fade.transition, delay: 0.15 }} className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+              <Link href="/dashboard" className="group inline-flex min-h-[52px] items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-lime-300 to-emerald-300 px-7 py-4 font-bold text-black shadow-[0_0_35px_rgba(190,242,100,0.4)] transition hover:-translate-y-0.5">
                 Start Tracking <ArrowRight size={18} className="transition group-hover:translate-x-1" />
               </Link>
-              <a href="#features" className="inline-flex items-center gap-2 rounded-2xl border border-white/15 px-7 py-4 font-bold text-white transition hover:border-lime-300/40 hover:bg-white/5">
+              <a href="#features" className="inline-flex min-h-[52px] items-center justify-center gap-2 rounded-2xl border border-white/15 px-7 py-4 font-bold text-white transition hover:border-lime-300/40 hover:bg-white/5">
                 <Play size={17} /> See How It Works
               </a>
             </motion.div>

@@ -41,13 +41,13 @@ export default function DashboardPage() {
         title={profile.name ? `Hey ${profile.name} 👋` : "YO, YOU'RE ALIVE 😭"}
         sub={demoMode ? "Showing demo data — explore freely, clear it anytime." : "How much money do I have? How long must it last? Answered below."}
         right={
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             {txns.length === 0 ? (
               <Btn onClick={loadDemo}><Sparkles size={15} /> Use Demo Data</Btn>
             ) : demoMode ? (
               <Btn variant="outline" onClick={clearDemo}>Clear Demo Data</Btn>
             ) : null}
-            <Link href="/expenses?action=add" className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-lime-300 to-emerald-300 px-5 py-3 text-sm font-bold text-black"><Plus size={16} /> Add</Link>
+            <Link href="/expenses?action=add" className="inline-flex min-h-[44px] items-center gap-2 whitespace-nowrap rounded-2xl bg-gradient-to-r from-lime-300 to-emerald-300 px-5 py-3 text-sm font-bold text-black"><Plus size={16} /> Add</Link>
           </div>
         }
       />
@@ -74,9 +74,9 @@ export default function DashboardPage() {
             ].map((s, i) => (
               <motion.div key={s.k} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.06 * i }}>
                 <Card>
-                  <p className="text-xs font-bold uppercase tracking-widest text-white/45">{s.k}</p>
-                  <p className="font-display mt-1 text-3xl font-extrabold"><AnimatedNumber value={s.v} prefix={s.pre ? (cur === "INR" ? "₹" : "") : ""} /></p>
-                  <p className="mt-1 text-xs text-white/50">{s.sub}</p>
+                  <p className="text-[11px] font-bold uppercase tracking-widest text-white/45 sm:text-xs">{s.k}</p>
+                  <p className="font-display mt-1 truncate text-2xl font-extrabold sm:text-3xl"><AnimatedNumber value={s.v} prefix={s.pre ? (cur === "INR" ? "₹" : "") : ""} /></p>
+                  <p className="mt-1 truncate text-xs text-white/50">{s.sub}</p>
                 </Card>
               </motion.div>
             ))}

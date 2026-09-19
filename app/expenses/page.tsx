@@ -64,11 +64,11 @@ function ExpensesInner() {
     <AppShell>
       <PageHeader kicker="Money" title="Expense tracker" sub="5-second logging. Type “₹250 Zomato” and we guess the category — you always have the final say."
         right={
-          <div className="flex gap-2">
-            <button onClick={() => setChooser(true)} className="inline-flex items-center gap-2 rounded-2xl border border-lime-300/30 bg-lime-300/10 px-4 py-3 text-sm font-bold text-lime-200 transition hover:bg-lime-300/20" aria-label="Scan payment screenshot">
+          <div className="flex flex-wrap gap-2">
+            <button onClick={() => setChooser(true)} className="inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-2xl border border-lime-300/30 bg-lime-300/10 px-4 py-3 text-sm font-bold text-lime-200 transition hover:bg-lime-300/20 sm:flex-none" aria-label="Scan payment screenshot">
               <ScanLine size={16} /> 📸 Scan
             </button>
-            <Btn onClick={openAdd}><Plus size={15} /> Add expense</Btn>
+            <Btn onClick={openAdd} className="flex-1 whitespace-nowrap sm:flex-none"><Plus size={15} /> Add expense</Btn>
           </div>
         } />
       <div className="mb-4 flex flex-wrap gap-2">

@@ -146,9 +146,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           {NAV.map((n) => {
             const active = path === n.href || (n.href !== "/dashboard" && path.startsWith(n.href));
             return (
-              <Link key={n.href} href={n.href} className={cn("flex flex-col items-center gap-1 rounded-2xl py-2 text-[11px] font-semibold", active ? "text-lime-300" : "text-white/50")}>
-                <n.icon size={20} />
-                {n.label}
+              <Link
+                key={n.href} href={n.href} aria-current={active ? "page" : undefined}
+                className={cn(
+                  "flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-2xl px-1 py-2 text-[11px] font-semibold transition-all duration-200 active:scale-95",
+                  active ? "bg-lime-300/12 text-lime-200" : "text-white/50"
+                )}
+              >
+                <n.icon size={21} className={cn("transition-transform duration-200", active && "scale-110")} />
+                <span className="truncate">{n.label}</span>
               </Link>
             );
           })}

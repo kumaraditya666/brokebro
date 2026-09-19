@@ -164,8 +164,13 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 }
 
 /* ---------- PWA: touch targets ---------- */
+html { -webkit-tap-highlight-color: transparent; }
 @media (pointer: coarse) {
   nav[aria-label="Mobile"] a { min-height: 56px; }
+  /* iOS zooms on focus when inputs are <16px — keep them at 16px on touch */
+  input, select, textarea { font-size: 16px !important; }
+  button { min-height: 40px; }
+  nav[aria-label="Mobile"] a, nav[aria-label="Mobile"] button { min-height: 56px; }
 }
 
 /* ---------- BROKE MUSIC ---------- */

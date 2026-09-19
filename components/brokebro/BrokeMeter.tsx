@@ -31,9 +31,9 @@ export function BrokeMeter({ score, label, currency = "INR", balance = 0 }: { sc
             <span className="text-[11px] uppercase tracking-widest text-white/45">broke meter</span>
           </div>
         </div>
-        <div className="min-w-[200px] flex-1">
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/45">Broke level</p>
-          <p className="font-display mt-1 text-2xl font-bold leading-tight">{label}</p>
+        <div className="min-w-0 flex-1 basis-48">
+          <p className="text-xs font-bold uppercase tracking-widest text-white/45">Broke level</p>
+          <p className="font-display mt-1 text-xl font-bold leading-tight sm:text-2xl">{label}</p>
           <p className="mt-2 text-sm text-white/60">
             Balance <span className="font-bold text-white">{fmtMoney(balance, currency)}</span> — no shame, just signal. Stretch it, don't stress it.
           </p>

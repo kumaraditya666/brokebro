@@ -4,7 +4,7 @@ import { cn } from "@/lib/brokebro/format";
 
 export function Card({ className, children, glow }: { className?: string; children: React.ReactNode; glow?: boolean }) {
   return (
-    <div className={cn("glass rounded-3xl p-5 shadow-card", glow && "glow-border", className)}>
+    <div className={cn("glass rounded-3xl p-4 shadow-card sm:p-5", glow && "glow-border", className)}>
       {children}
     </div>
   );
@@ -41,7 +41,7 @@ export function Field({ label, children, hint }: { label: string; children: Reac
 }
 
 export const inputCls =
-  "w-full rounded-2xl border border-white/12 bg-black/40 px-4 py-3 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-lime-300/60 focus:ring-2 focus:ring-lime-300/20";
+  "w-full rounded-2xl border border-white/12 bg-black/40 px-4 py-3 text-base text-white placeholder:text-white/30 outline-none transition focus:border-lime-300/60 focus:ring-2 focus:ring-lime-300/20 sm:text-sm";
 
 export function Badge({ children, tone = "lime" }: { children: React.ReactNode; tone?: "lime" | "violet" | "pink" | "muted" }) {
   const map = {
@@ -76,9 +76,9 @@ export function EmptyState({ emoji, title, body, action }: { emoji: string; titl
 export function PageHeader({ kicker, title, sub, right }: { kicker?: string; title: string; sub?: string; right?: React.ReactNode }) {
   return (
     <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
-      <div>
+      <div className="min-w-0">
         {kicker && <p className="mb-1 text-xs font-bold uppercase tracking-[0.2em] text-lime-300/80">{kicker}</p>}
-        <h1 className="font-display text-3xl font-extrabold tracking-tight sm:text-4xl">{title}</h1>
+        <h1 className="font-display text-2xl font-extrabold tracking-tight sm:text-4xl">{title}</h1>
         {sub && <p className="mt-1.5 max-w-lg text-sm text-white/55">{sub}</p>}
       </div>
       {right && <div className="flex items-center gap-2">{right}</div>}
