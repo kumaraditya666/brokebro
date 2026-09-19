@@ -44,7 +44,7 @@ export default function SettingsPage() {
         let localKB: number | undefined;
         try {
           const raw = localStorage.getItem("brokebro-v1");
-          localKB = raw ? Math.round(raw.length / 1024) : 0;
+          localKB = raw ? raw.length : 0; // ~bytes; kb() formats tiers
         } catch { /* private mode */ }
         setStorage({ use: est?.usage, quota: est?.quota, localKB });
       } catch { /* unsupported */ }
@@ -111,7 +111,13 @@ export default function SettingsPage() {
     }
   };
 
-  const kb = (n?: number) => (n == null ? "—" : n > 1024 ? `${(n / 1024).toFixed(1)} MB` : `${Math.round(n)} KB`);
+  const kb = (n?: number) => {
+    if (n == null || Number.isNaN(n)) return "—";
+    if (n < 1024) return `${Math.round(n)} B`;
+    if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
+    if (n < 1024 * 1024 * 1024) return `${(n / 1024 / 1024).toFixed(1)} MB`;
+    return `${(n / 1024 / 1024 / 1024).toFixed(2)} GB`;
+  };
 
   return (
     <AppShell>
